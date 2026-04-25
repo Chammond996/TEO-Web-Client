@@ -1,0 +1,14 @@
+# Ignore everything by default
+*
+
+# Keep ignore config itself tracked
+!.gitignore
+
+# Track source files only
+!src/
+!src/**
+
+# Explicitly ignore large asset folders
+audio/
+sprite/
+sprites/
