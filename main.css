@@ -1,0 +1,439 @@
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap");
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family: "Quicksand", sans-serif;
+    color: #fff;
+    background-color: #000;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.menu {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+/* sprite: 360x160 — 2 cols (normal|hover) × 4 rows */
+.sprite-button {
+    width: min(180px, 45vw);
+    height: min(40px, 10vw);
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    background-image: url("./sprites/gfx001/113.png");
+    background-repeat: no-repeat;
+    background-size: 200% 400%;
+    cursor: pointer;
+}
+
+.sprite-button:active {
+    transform: translateY(1px);
+}
+
+/* Row 0 — Create Account */
+.btn-create-account                  { background-position: 0%   0%; }
+.btn-create-account:hover,
+.btn-create-account:focus-visible    { background-position: 100% 0%; outline: none; }
+
+/* Row 1 — Play Game */
+.btn-play-game                       { background-position: 0%   33.333%; }
+.btn-play-game:hover,
+.btn-play-game:focus-visible         { background-position: 100% 33.333%; outline: none; }
+
+/* Row 2 — View Credits */
+.btn-view-credits                    { background-position: 0%   66.667%; }
+.btn-view-credits:hover,
+.btn-view-credits:focus-visible      { background-position: 100% 66.667%; outline: none; }
+
+/* ── Create Account form ─────────────────────────────── */
+
+.ca-form {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px;
+}
+
+.ca-title {
+    margin: 0 0 8px;
+    color: #fff;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.ca-label {
+    width: min(280px, 80vw);
+    color: #fff;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ca-input {
+    width: min(280px, 80vw);
+    background: rgb(148, 115, 82);
+    color: #000;
+    border: 1px solid rgb(92, 70, 48);
+    padding: 6px 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.ca-input:focus {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+/* sprite 114.png — 240x200, 5 rows × 2 cols, each cell 120×40 */
+.ca-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.ca-btn {
+    width: 120px;
+    height: 40px;
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    background-image: url("./sprites/gfx001/114.png");
+    background-repeat: no-repeat;
+    background-size: 200% 500%;
+    cursor: pointer;
+}
+
+.ca-btn:active { transform: translateY(1px); }
+
+/* Row 0 — Create */
+.ca-btn-create              { background-position: 0%   0%; }
+.ca-btn-create:hover,
+.ca-btn-create:focus-visible { background-position: 100% 0%; outline: none; }
+
+/* Row 1 — Cancel */
+.ca-btn-cancel              { background-position: 0%   25%; }
+.ca-btn-cancel:hover,
+.ca-btn-cancel:focus-visible { background-position: 100% 25%; outline: none; }
+
+/* Row 2 — Connect */
+.ca-btn-connect              { background-position: 0%   50%; }
+.ca-btn-connect:hover,
+.ca-btn-connect:focus-visible { background-position: 100% 50%; outline: none; }
+
+/* ── Init message popup ────────────────────────────── */
+
+.init-message-overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 1000;
+}
+
+.init-message-box {
+    position: relative;
+    width: 290px;
+    height: 157px;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+.init-message-title {
+    position: absolute;
+    left: 60px;
+    top: 27px;
+    margin: 0;
+    color: #fff;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.init-message-body {
+    position: absolute;
+    left: 30px;
+    top: 70px;
+    width: 180px;
+    margin: 0;
+    color: #f0ece6;
+    font-size: 0.86rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: pre-line;
+}
+
+.init-message-ok {
+    position: absolute;
+    left: 180px;
+    top: 113px;
+    width: 91px;
+    height: 29px;
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    background-image: url("./sprites/gfx001/115.png");
+    background-repeat: no-repeat;
+    background-size: 200% 1000%;
+    background-position: 0% 44.444%;
+    cursor: pointer;
+}
+
+.init-message-ok:hover,
+.init-message-ok:focus-visible {
+    background-position: 100% 44.444%;
+    outline: none;
+}
+
+/* ── Character screen ──────────────────────────────── */
+
+.char-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.char-list {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+}
+
+/* 111.png is 276×123 — one panel per character */
+.char-slot {
+    position: relative;
+    width: 276px;
+    height: 123px;
+    background-image: url("./sprites/gfx001/111.png");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    cursor: pointer;
+}
+
+.char-slot-canvas {
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 128px;
+    height: 115px;
+    display: block;
+}
+
+.char-slot-selected::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    outline: 2px solid rgba(255, 220, 100, 0.8);
+    pointer-events: none;
+}
+
+/* name sits inside the right panel at (140, 20) */
+.char-slot-name {
+    position: absolute;
+    left: 140px;
+    top: 25px;
+    color: #f0ece6;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+}
+
+.char-slot-actions {
+    position: absolute;
+    left: 140px;
+    top: 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.char-slot-btn {
+    width: 91px;
+    height: 29px;
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    background-image: url("./sprites/gfx001/115.png");
+    background-repeat: no-repeat;
+    background-size: 200% 1000%;
+    cursor: pointer;
+}
+
+.char-slot-btn:active { transform: translateY(1px); }
+
+/* Row 2 — Login */
+.char-slot-btn-login { background-position: 0% 22.222%; }
+.char-slot-btn-login:hover,
+.char-slot-btn-login:focus-visible { background-position: 100% 22.222%; outline: none; }
+
+/* Row 6 — Add... (used as Create for empty slots) */
+.char-slot-btn-create { background-position: 0% 66.667%; }
+.char-slot-btn-create:hover,
+.char-slot-btn-create:focus-visible { background-position: 100% 66.667%; outline: none; }
+
+/* Row 3 — Delete */
+.char-slot-btn-delete { background-position: 0% 33.333%; }
+.char-slot-btn-delete:hover,
+.char-slot-btn-delete:focus-visible { background-position: 100% 33.333%; outline: none; }
+
+.char-empty {
+    color: #f0ece6;
+    font-size: 0.9rem;
+}
+
+/* 115.png — 2 cols × 10 rows, each cell 91×29 */
+.char-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.char-btn {
+    width: 91px;
+    height: 29px;
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    background-image: url("./sprites/gfx001/115.png");
+    background-repeat: no-repeat;
+    background-size: 200% 1000%;
+    cursor: pointer;
+}
+
+.char-btn:active { transform: translateY(1px); }
+
+/* Row 2 — Login (play) */
+.char-btn-play              { background-position: 0%   22.222%; }
+.char-btn-play:hover,
+.char-btn-play:focus-visible { background-position: 100% 22.222%; outline: none; }
+
+/* Row 5 — Back */
+.char-btn-back              { background-position: 0%   55.556%; }
+.char-btn-back:hover,
+.char-btn-back:focus-visible { background-position: 100% 55.556%; outline: none; }
+
+@media (max-width: 920px) {
+    .char-list {
+        flex-wrap: wrap;
+    }
+}
+
+.world-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: #05070a;
+    z-index: 20;
+}
+
+.world-fps {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 3;
+    min-width: 76px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background: rgba(4, 10, 18, 0.7);
+    color: #d6eaff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    pointer-events: none;
+}
+
+.world-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, rgba(18, 26, 38, 0.95), rgba(9, 13, 18, 0.95));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.world-map-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #e8f4ff;
+}
+
+.world-back-btn {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.world-back-btn:hover,
+.world-back-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    outline: none;
+}
+
+.world-map-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: #c8d9ec;
+}
+
+.world-map-canvas {
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    flex: none;
+}
+
+.world-map-pixi {
+    display: block;
+    line-height: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.world-map-pixi-canvas {
+    display: block;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+}
+

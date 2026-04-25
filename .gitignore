@@ -4,7 +4,15 @@
 # Keep ignore config itself tracked
 !.gitignore
 
-# Track source files only
+# Track root files needed to run the client
+!index.html
+!main.js
+!main.css
+!gateway.js
+!package.json
+!package-lock.json
+
+# Track source files
 !src/
 !src/**
 
