@@ -4,7 +4,9 @@ import {
     Container,
     SCALE_MODES,
     Sprite,
+    Texture,
 } from "pixi.js";
+import { CharacterRenderHelper } from "./CharacterRenderHelper.js";
 
 const HALF_TILE_WIDTH = 32;
 const HALF_TILE_HEIGHT = 16;
@@ -116,10 +118,15 @@ export class PixiMapRenderer {
         this.hostElement = hostElement;
         this.app = null;
         this.worldContainer = null;
-        this.entityContainer = null;
+        this.playerContainer = null;
         this.effectsContainer = null;
         this.uiContainer = null;
         this.textureCache = new Map();
+        this.playerTextureCache = new Map();
+        this.playerSprite = null;
+        this.playerDirection = null;
+        this.playerAppearanceKey = null;
+        this.baseFocusScreen = { x: 0, y: 0 };
     }
 
     async ensureApp(viewportWidth, viewportHeight) {
@@ -138,17 +145,17 @@ export class PixiMapRenderer {
             this.app.renderer.canvas.style.imageRendering = "pixelated";
 
             this.worldContainer = new Container();
-            this.entityContainer = new Container();
+            this.playerContainer = new Container();
             this.effectsContainer = new Container();
             this.uiContainer = new Container();
 
             this.worldContainer.sortableChildren = true;
-            this.entityContainer.sortableChildren = true;
+            this.playerContainer.sortableChildren = true;
             this.effectsContainer.sortableChildren = true;
             this.uiContainer.sortableChildren = true;
 
             this.app.stage.addChild(this.worldContainer);
-            this.app.stage.addChild(this.entityContainer);
+            this.app.stage.addChild(this.playerContainer);
             this.app.stage.addChild(this.effectsContainer);
             this.app.stage.addChild(this.uiContainer);
 
@@ -201,14 +208,93 @@ export class PixiMapRenderer {
     }
 
     clearWorld() {
-        if (!this.worldContainer || !this.entityContainer || !this.effectsContainer || !this.uiContainer) {
+        if (!this.worldContainer || !this.effectsContainer || !this.uiContainer) {
             return;
         }
 
         this.worldContainer.removeChildren();
-        this.entityContainer.removeChildren();
         this.effectsContainer.removeChildren();
         this.uiContainer.removeChildren();
+    }
+
+    buildPlayerAppearanceKey(options = {}) {
+        const gender = Number(options.playerGender ?? 0);
+        const skin = Number(options.playerSkin ?? 0);
+        const hairStyle = Number(options.playerHairStyle ?? 1);
+        const hairColour = Number(options.playerHairColour ?? 0);
+        return `${gender}:${skin}:${hairStyle}:${hairColour}`;
+    }
+
+    async getPlayerTextures(options = {}) {
+        const appearanceKey = this.buildPlayerAppearanceKey(options);
+        if (this.playerTextureCache.has(appearanceKey)) {
+            return this.playerTextureCache.get(appearanceKey);
+        }
+
+        const pending = (async () => {
+            const directionTextures = new Map();
+            const base = {
+                gender: Number(options.playerGender ?? 0),
+                skin: Number(options.playerSkin ?? 0),
+                hairStyle: Number(options.playerHairStyle ?? 1),
+                hairColour: Number(options.playerHairColour ?? 0),
+            };
+
+            // Preload all standing directions once so direction swaps are instant.
+            for (const direction of [0, 1, 2, 3]) {
+                const canvas = await CharacterRenderHelper.buildCharacterComposite({
+                    ...base,
+                    direction,
+                });
+                const texture = Texture.from(canvas);
+                if (texture?.source) {
+                    texture.source.scaleMode = SCALE_MODES.NEAREST;
+                }
+                directionTextures.set(direction, texture);
+            }
+
+            return directionTextures;
+        })();
+
+        this.playerTextureCache.set(appearanceKey, pending);
+        return pending;
+    }
+
+    ensurePlayerSprite(initialTexture) {
+        if (this.playerSprite) {
+            return this.playerSprite;
+        }
+
+        this.playerSprite = new Sprite(initialTexture);
+        this.playerSprite.zIndex = 0;
+        this.playerContainer.addChild(this.playerSprite);
+        return this.playerSprite;
+    }
+
+    positionPlayerSprite() {
+        if (!this.playerSprite || !this.app) {
+            return;
+        }
+
+        const halfWidth = Math.floor(this.app.renderer.width / 2);
+        const halfHeight = Math.floor(this.app.renderer.height / 2);
+
+        this.playerSprite.x = Math.floor(halfWidth - this.playerSprite.texture.width / 2);
+        this.playerSprite.y = Math.floor(halfHeight + HALF_TILE_HEIGHT - this.playerSprite.texture.height);
+    }
+
+    getFocusScreen(playerX, playerY, mapWidth, mapHeight) {
+        const focusX = playerX > 0 ? playerX - 1 : Math.floor(mapWidth / 2);
+        const focusY = playerY > 0 ? playerY - 1 : Math.floor(mapHeight / 2);
+        return isoToScreen(focusX, focusY);
+    }
+
+    updateCameraForFocus(focusScreen) {
+        const offsetX = Math.floor(this.baseFocusScreen.x - focusScreen.x);
+        const offsetY = Math.floor(this.baseFocusScreen.y - focusScreen.y);
+        this.worldContainer.position.set(offsetX, offsetY);
+        this.effectsContainer.position.set(offsetX, offsetY);
+        this.uiContainer.position.set(offsetX, offsetY);
     }
 
     async buildStaticEntities(mapData) {
@@ -263,9 +349,8 @@ export class PixiMapRenderer {
         const height = Number(mapData?.height ?? 0);
         const playerX = Number(options.playerX ?? 0);
         const playerY = Number(options.playerY ?? 0);
-        const focusX = playerX > 0 ? playerX - 1 : Math.floor(width / 2);
-        const focusY = playerY > 0 ? playerY - 1 : Math.floor(height / 2);
-        const playerScreen = isoToScreen(focusX, focusY);
+        const playerScreen = this.getFocusScreen(playerX, playerY, width, height);
+        this.baseFocusScreen = playerScreen;
         const halfWidth = Math.floor(viewport.width / 2);
         const halfHeight = Math.floor(viewport.height / 2);
         const staticEntities = await this.buildStaticEntities(mapData);
@@ -287,6 +372,13 @@ export class PixiMapRenderer {
             this.worldContainer.addChild(sprite);
         }
 
+        await this.updatePlayer({
+            ...options,
+            mapWidth: width,
+            mapHeight: height,
+        });
+        this.updateCameraForFocus(playerScreen);
+
         this.app.stage.scale.set(2);
         this.app.stage.pivot.set(halfWidth, halfHeight);
         this.app.stage.position.set(halfWidth, halfHeight);
@@ -295,12 +387,49 @@ export class PixiMapRenderer {
         this.app.renderer.canvas.style.height = `${viewport.height}px`;
     }
 
+    async updatePlayer(options = {}) {
+        if (!this.app || !this.playerContainer) {
+            return;
+        }
+
+        const mapWidth = Number(options.mapWidth ?? 0);
+        const mapHeight = Number(options.mapHeight ?? 0);
+        const playerDirection = Number(options.playerDirection ?? 0);
+        const playerX = Number(options.playerX ?? 0);
+        const playerY = Number(options.playerY ?? 0);
+        const appearanceKey = this.buildPlayerAppearanceKey(options);
+        const directionTextures = await this.getPlayerTextures(options);
+        const nextTexture = directionTextures.get(playerDirection) ?? directionTextures.get(0);
+        if (!nextTexture) {
+            return;
+        }
+
+        const sprite = this.ensurePlayerSprite(nextTexture);
+
+        // Direction updates only swap texture; the sprite instance remains stable.
+        if (this.playerDirection !== playerDirection || this.playerAppearanceKey !== appearanceKey) {
+            sprite.texture = nextTexture;
+            this.playerDirection = playerDirection;
+            this.playerAppearanceKey = appearanceKey;
+            this.positionPlayerSprite();
+        }
+
+        if (mapWidth > 0 && mapHeight > 0) {
+            const focusScreen = this.getFocusScreen(playerX, playerY, mapWidth, mapHeight);
+            this.updateCameraForFocus(focusScreen);
+        }
+    }
+
     destroy() {
         if (this.app) {
             this.app.destroy(true, { children: true });
             this.app = null;
         }
         this.textureCache.clear();
+        this.playerTextureCache.clear();
+        this.playerSprite = null;
+        this.playerDirection = null;
+        this.playerAppearanceKey = null;
         this.hostElement.innerHTML = "";
     }
 }
@@ -310,6 +439,14 @@ export async function buildPixiMapView(mapData, options = {}) {
     host.className = "world-map-pixi";
     const renderer = new PixiMapRenderer(host);
     await renderer.renderMap(mapData, options);
+    host.__updateWorldViewPlayer = async (nextOptions = {}) => {
+        await renderer.updatePlayer({
+            ...options,
+            ...nextOptions,
+            mapWidth: Number(mapData?.width ?? 0),
+            mapHeight: Number(mapData?.height ?? 0),
+        });
+    };
     host.__disposeWorldView = () => renderer.destroy();
     return host;
 }
